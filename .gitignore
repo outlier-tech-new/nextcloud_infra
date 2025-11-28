@@ -1,0 +1,16 @@
+# Secrets & runtime
+/templates/*.env.actual
+/templates/*.env.local
+/secrets/
+*.key
+*.pem
+/srv/
+/exports/
+
+# OS artifacts
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log

@@ -1,0 +1,90 @@
+services:
+  nextcloud:
+    image: nextcloud:28-apache
+    container_name: nextcloud_app
+    restart: unless-stopped
+    env_file:
+      - .env
+      - nextcloud.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - /srv/nextcloud/app:/var/www/html
+      - /srv/nextcloud/sync:/var/www/html/data
+      - /srv/nextcloud/collab:/var/www/html/data/collab
+    environment:
+      - REDIS_HOST_PASSWORD=${REDIS_HOST_PASSWORD}
+
+  cron:
+    image: nextcloud:28-apache
+    container_name: nextcloud_cron
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    env_file:
+      - .env
+      - nextcloud.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - /srv/nextcloud/app:/var/www/html
+      - /srv/nextcloud/sync:/var/www/html/data
+      - /srv/nextcloud/collab:/var/www/html/data/collab
+    environment:
+      - REDIS_HOST_PASSWORD=${REDIS_HOST_PASSWORD}
+
+  db:
+    image: mariadb:11.4
+    container_name: nextcloud_db
+    restart: unless-stopped
+    env_file:
+      - db.env
+    command:
+      - --transaction-isolation=READ-COMMITTED
+      - --binlog-format=ROW
+      - --innodb-file-per-table=1
+      - --skip-innodb-doublewrite=OFF
+    volumes:
+      - /srv/nextcloud/db:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mariadb-admin ping -h localhost -u root -p"$${MYSQL_ROOT_PASSWORD}" --silent
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud_redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --save
+      - "60"
+      - "100"
+      - --loglevel
+      - warning
+      - --requirepass
+      - ${REDIS_HOST_PASSWORD}
+    volumes:
+      - /srv/nextcloud/redis:/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - redis-cli -a ${REDIS_HOST_PASSWORD} ping
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+volumes: {}
+

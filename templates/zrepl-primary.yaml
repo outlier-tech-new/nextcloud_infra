@@ -1,0 +1,70 @@
+global:
+  logging:
+    - type: syslog
+      level: info
+      format: human
+  monitoring:
+    - type: prometheus
+      listen: "127.0.0.1:9814"
+
+jobs:
+  - name: local_snapshots
+    type: snap
+    filesystems:
+      "tank/nextcloud-app": true
+      "tank/nextcloud-sync": true
+      "tank/nextcloud-collab": true
+      "tank/nextcloud-db": true
+      "tank/nextcloud-redis": true
+      "tank/backups": true
+    snapshotting:
+      type: periodic
+      interval: 1h
+      prefix: autosnap_
+    pruning:
+      keep:
+        - type: grid
+          grid: 1x12h(1h),7d(1d),4w(1w),12m(1m)
+
+  - name: push_to_peer
+    type: push
+    connect:
+      type: ssh+stdinserver
+      host: HOME_NODE_HOSTNAME
+      user: zrepl
+      port: 22
+      identity_file: /etc/zrepl/keys/id_ed25519
+    filesystems:
+      "tank/nextcloud-app": true
+      "tank/nextcloud-sync": true
+      "tank/nextcloud-collab": true
+      "tank/nextcloud-db": true
+      "tank/nextcloud-redis": true
+      "tank/backups": true
+    snapshotting:
+      type: manual
+    pruning:
+      keep_sender:
+        - type: grid
+          grid: 1x12h(1h),7d(1d),4w(1w),12m(1m)
+      keep_receiver:
+        - type: grid
+          grid: 1x12h(1h),7d(1d),4w(1w),12m(1m)
+    replication:
+      protection:
+        initial: guarantee_resumability
+        incremental: guarantee_resumability
+
+# Configure this job on the DR node to receive the replication stream.
+# Update HOME_NODE_HOSTNAME and BACKUP_ROOT as needed per host.
+  - name: receive_from_peer
+    type: sink
+    root_fs: BACKUP_ROOT
+    serve:
+      type: ssh+stdinserver
+      user: zrepl
+      host: "0.0.0.0"
+      port: 22
+
+
+
