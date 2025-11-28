@@ -8,10 +8,10 @@ sudo mkdir -p /srv/nextcloud/collab
 sudo mkdir -p /srv/nextcloud/db
 sudo mkdir -p /srv/nextcloud/redis
 sudo mkdir -p /srv/nextcloud/app
-sudo install -m 640 /home/dtadmin/config/nextcloud/compose.env /srv/nextcloud/.env
-sudo install -m 640 /home/dtadmin/config/nextcloud/nextcloud.env /srv/nextcloud/nextcloud.env
-sudo install -m 640 /home/dtadmin/config/nextcloud/db.env /srv/nextcloud/db.env
-sudo install -m 644 /home/dtadmin/config/nextcloud/docker-compose.yml /srv/nextcloud/docker-compose.yml
+sudo install -m 640 ../templates/compose.env /srv/nextcloud/.env
+sudo install -m 640 ../templates/nextcloud.env /srv/nextcloud/nextcloud.env
+sudo install -m 640 ../templates/db.env /srv/nextcloud/db.env
+sudo install -m 644 ../templates/docker-compose.yml /srv/nextcloud/docker-compose.yml
 sudo chown 0:0 /srv/nextcloud/.env
 sudo chown 0:0 /srv/nextcloud/nextcloud.env
 sudo chown 0:0 /srv/nextcloud/db.env
