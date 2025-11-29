@@ -1,0 +1,24 @@
+global:
+  logging:
+    - type: syslog
+      level: info
+      format: human
+
+jobs:
+  - name: receive_from_nas01
+    type: sink
+    root_fs: tank/replicated/nextcloud
+    serve:
+      type: ssh+stdinserver
+      user: zrepl
+      host: 0.0.0.0
+      port: 22
+    pruning:
+      keep:
+        - type: grid
+          grid: 1x1h(keep=all) | 24x1h | 360x1d
+          regex: "^autosnap_"
+        - type: regex
+          negate: true
+          regex: "^autosnap_"
+
